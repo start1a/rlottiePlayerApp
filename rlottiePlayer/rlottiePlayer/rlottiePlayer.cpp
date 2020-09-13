@@ -108,7 +108,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
-   TestRlottie();
+   DialogBox(hInst, MAKEINTRESOURCE(MAIN_WINDOW), hWnd, About);
+   // TestRlottie();
 
    return TRUE;
 }
