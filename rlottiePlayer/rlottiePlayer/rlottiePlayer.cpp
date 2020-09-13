@@ -4,6 +4,7 @@
 
 #include "framework.h"
 #include "rlottiePlayer.h"
+#include <Commdlg.h>
 
 #define MAX_LOADSTRING 100
 
@@ -11,12 +12,14 @@
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+HWND hTextFileToBeOpened;                               // openDialog file path
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+void openFileDialog(HWND hDlg);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -169,6 +172,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_INITDIALOG:
+        hTextFileToBeOpened = GetDlgItem(hDlg, TEXT_FILENAME);
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
@@ -177,7 +181,34 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
         }
+        else if (LOWORD(wParam) == BTN_BROWSE) {
+            openFileDialog(hDlg);
+        }
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+void openFileDialog(HWND hDlg)
+{
+    OPENFILENAME ofn;       // common dialog box structure
+    TCHAR szFile[260] = { 0 };       // if using TCHAR macros
+
+    // Initialize OPENFILENAME
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hDlg;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = _T("JSON\0*.json\0");
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = NULL;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = NULL;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    if (GetOpenFileName(&ofn))
+    {
+        SetWindowText(hTextFileToBeOpened, ofn.lpstrFile);
+    }
 }
