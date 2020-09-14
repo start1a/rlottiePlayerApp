@@ -1,6 +1,7 @@
 #pragma once
 
 #include "resource.h"
+#include "atlconv.h"
 
 
-void TestRlottie();
+void TestRlottie(LPSTR path);
