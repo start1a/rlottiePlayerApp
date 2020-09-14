@@ -184,31 +184,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         }
         else if (LOWORD(wParam) == BTN_BROWSE)
         {
-            OPENFILENAME ofn;       // common dialog box structure
-            TCHAR szFile[260] = { 0 };       // if using TCHAR macros
-
-            // Initialize OPENFILENAME
-            ZeroMemory(&ofn, sizeof(ofn));
-            ofn.lStructSize = sizeof(ofn);
-            ofn.hwndOwner = hDlg;
-            ofn.lpstrFile = szFile;
-            ofn.nMaxFile = sizeof(szFile);
-            ofn.lpstrFilter = _T("JSON\0*.json\0");
-            ofn.nFilterIndex = 1;
-            ofn.lpstrFileTitle = NULL;
-            ofn.nMaxFileTitle = 0;
-            ofn.lpstrInitialDir = NULL;
-            ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-            // dialog success
-            if (GetOpenFileName(&ofn))
-            {
-                SetWindowText(hTextFileToBeOpened, ofn.lpstrFile);
-                // LPWSTR(w_char*) -> LPSTR(char*)
-                USES_CONVERSION;
-                LPSTR path = W2A(ofn.lpstrFile);
-                TestRlottie(path);
-            }
+            openJSONFileDialog(hDlg);
         }
         break;
     }
