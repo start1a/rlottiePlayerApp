@@ -185,6 +185,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         else if (LOWORD(wParam) == BTN_BROWSE)
         {
             openJSONFileDialog(hDlg);
+            return (INT_PTR)TRUE;
         }
         break;
     }
