@@ -216,7 +216,7 @@ void openJSONFileDialog(HWND hDlg)
         // LPWSTR(w_char*) -> LPSTR(char*)
         USES_CONVERSION;
         LPSTR path = W2A(ofn.lpstrFile);
-
-        TestRlottie(path);
+        
+        setAnimation(path);
     }
 }

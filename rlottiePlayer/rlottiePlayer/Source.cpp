@@ -1,9 +1,11 @@
 #include "rlottie.h"
-#include "rlottiePlayer.h"
 
-void TestRlottie(LPSTR path)
+typedef std::unique_ptr<rlottie::Animation> Animation;
+Animation anim;
+
+void setAnimation(char* path)
 {
-	auto animation = rlottie::Animation::loadFromFile(path);
+	anim = rlottie::Animation::loadFromFile(path);
 	size_t w, h;
-	animation->size(w, h);
+	anim->size(w, h);
 }
