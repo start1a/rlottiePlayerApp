@@ -5,7 +5,7 @@
 #include "framework.h"
 #include "rlottiePlayer.h"
 #include <Commdlg.h>                        // OPENFILENAME
-#include "atlconv.h"
+#include "atlconv.h"                             // String cast. ex) LPWSTR <-> LPSTR
 
 #define MAX_LOADSTRING 100
 
@@ -14,15 +14,15 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HWND hTextFileToBeOpened;                               // openDialog file path
-HWND hButtonPlay;                               // openDialog file path
+HWND hBtnPlay, hBtnWhite, hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
-void openJSONFileDialog(HWND hDlg);
-void dlgUICommand(HWND hDlg, WPARAM wParam);
+void openJSONFileDialog(HWND);
+void dlgUICommand(HWND, WPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -115,7 +115,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
     DialogBox(hInst, MAKEINTRESOURCE(MAIN_WINDOW), hWnd, About);
-    // TestRlottie();
 
     return TRUE;
 }
@@ -171,14 +170,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static bool isplay = false;
-
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
     case WM_INITDIALOG:
         hTextFileToBeOpened = GetDlgItem(hDlg, TEXT_FILENAME);
-        hButtonPlay = GetDlgItem(hDlg, BTN_PLAY);
+        hBtnPlay = GetDlgItem(hDlg, BTN_PLAY);
+        hBtnWhite = GetDlgItem(hDlg, BTN_WHITE);
+        hBtnBlack = GetDlgItem(hDlg, BTN_BLACK);
+        hBtnRed = GetDlgItem(hDlg, BTN_RED);
+        hBtnGreen = GetDlgItem(hDlg, BTN_GREEN);
+        hBtnBlue = GetDlgItem(hDlg, BTN_BLUE);
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
@@ -191,33 +193,6 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
-}
-
-void dlgUICommand(HWND hDlg, WPARAM wParam) {
-    static bool isplay = false;
-
-    switch (LOWORD(wParam))
-    {
-    case BTN_BROWSE:
-        openJSONFileDialog(hDlg);
-        break;
-
-    case BTN_PLAY:
-        LPWSTR textBtnPlay;
-        USES_CONVERSION;
-        if (isplay)
-        {
-            isplay = false;
-            textBtnPlay = A2W("pause");
-        }
-        else
-        {
-            isplay = true;
-            textBtnPlay = A2W("play");
-        }
-        SetWindowText(hButtonPlay, textBtnPlay);
-        break;
-    }
 }
 
 void openJSONFileDialog(HWND hDlg)
@@ -246,5 +221,53 @@ void openJSONFileDialog(HWND hDlg)
         LPSTR path = W2A(ofn.lpstrFile);
         
         setAnimation(path);
+    }
+}
+
+void dlgUICommand(HWND hDlg, WPARAM wParam) {
+    static bool isplay = false;
+
+    switch (LOWORD(wParam))
+    {
+    case BTN_BROWSE:
+        openJSONFileDialog(hDlg);
+        break;
+
+    case BTN_PLAY:
+    {
+        LPWSTR textBtnPlay;
+        USES_CONVERSION;
+        if (isplay)
+        {
+            isplay = false;
+            textBtnPlay = A2W("pause");
+        }
+        else
+        {
+            isplay = true;
+            textBtnPlay = A2W("play");
+        }
+        SetWindowText(hBtnPlay, textBtnPlay);
+        break;
+    }
+    case WM_DROPFILES:
+        
+        break;
+
+    case BTN_WHITE:
+        setColor(1.0, 1.0, 1.0);
+        break;
+    case BTN_BLACK:
+        setColor(0.0, 0.0, 0.0);
+        break;
+    case BTN_RED:
+        setColor(1.0, 0.0, 0.0);
+        break;
+     case BTN_GREEN:
+        setColor(0.0, 1.0, 0.0);
+        break;
+    case BTN_BLUE:
+        setColor(0.0, 0.0, 1.0);
+        break;
     }
 }
