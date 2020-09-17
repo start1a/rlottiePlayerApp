@@ -14,6 +14,7 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HWND hTextFileToBeOpened;                               // openDialog file path
+HWND hButtonPlay;                               // openDialog file path
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -21,6 +22,7 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void openJSONFileDialog(HWND hDlg);
+void dlgUICommand(HWND hDlg, WPARAM wParam);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -169,11 +171,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    static bool isplay = false;
+
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
     case WM_INITDIALOG:
         hTextFileToBeOpened = GetDlgItem(hDlg, TEXT_FILENAME);
+        hButtonPlay = GetDlgItem(hDlg, BTN_PLAY);
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
@@ -182,14 +187,37 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
         }
-        else if (LOWORD(wParam) == BTN_BROWSE)
-        {
-            openJSONFileDialog(hDlg);
-            return (INT_PTR)TRUE;
-        }
+        else dlgUICommand(hDlg, wParam);
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+void dlgUICommand(HWND hDlg, WPARAM wParam) {
+    static bool isplay = false;
+
+    switch (LOWORD(wParam))
+    {
+    case BTN_BROWSE:
+        openJSONFileDialog(hDlg);
+        break;
+
+    case BTN_PLAY:
+        LPWSTR textBtnPlay;
+        USES_CONVERSION;
+        if (isplay)
+        {
+            isplay = false;
+            textBtnPlay = A2W("pause");
+        }
+        else
+        {
+            isplay = true;
+            textBtnPlay = A2W("play");
+        }
+        SetWindowText(hButtonPlay, textBtnPlay);
+        break;
+    }
 }
 
 void openJSONFileDialog(HWND hDlg)
