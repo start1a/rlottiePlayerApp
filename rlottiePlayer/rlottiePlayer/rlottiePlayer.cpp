@@ -220,7 +220,8 @@ void openJSONFileDialog(HWND hDlg)
         USES_CONVERSION;
         LPSTR path = W2A(ofn.lpstrFile);
         
-        setAnimation(path);
+        setAnimation(path, 1, 2);
+        auto res = renderAnimation(0.0);
     }
 }
 
