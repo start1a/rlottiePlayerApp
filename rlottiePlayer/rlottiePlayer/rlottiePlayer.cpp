@@ -299,7 +299,7 @@ Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height)
     Info.bmiHeader.biCompression = BI_RGB;
     Info.bmiHeader.biSizeImage = 0;  //(((32 * width + 31) & ~31) / 8) * height;
 
-    return new Gdiplus::Bitmap(&Info, data);;
+    return new Gdiplus::Bitmap(&Info, data);
 }
 
 void renderAnimation(double pos)
@@ -307,6 +307,7 @@ void renderAnimation(double pos)
     // render
     auto resRender = renderRLottieAnimation(pos);
     img = CreateBitmap(resRender->buffer(), resRender->width(), resRender->height());
+    img->RotateFlip(RotateNoneFlipY);
     // call WM_PAINT message
     InvalidateRect(mainWindow, NULL, TRUE);
 }
