@@ -1,8 +1,12 @@
 #pragma once
 
 #include "resource.h"
-#include <stdint.h>
+#include "rlottie.h"
+#include <Commdlg.h>                        // OPENFILENAME
+#include "atlconv.h"                             // String cast. ex) LPWSTR <-> LPSTR
+#include <gdiplus.h>
+using namespace rlottie;
 
 void setAnimation(char* path, size_t w, size_t h);
 void setColor(float r, float g, float b);
-uint32_t* renderAnimation(double pos);
+Surface* renderRLottieAnimation(double pos);

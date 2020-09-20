@@ -4,8 +4,7 @@
 
 #include "framework.h"
 #include "rlottiePlayer.h"
-#include <Commdlg.h>                        // OPENFILENAME
-#include "atlconv.h"                             // String cast. ex) LPWSTR <-> LPSTR
+using namespace Gdiplus;
 
 #define MAX_LOADSTRING 100
 
@@ -13,8 +12,10 @@
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+HWND mainWindow;                                    // Main Window Instance
 HWND hTextFileToBeOpened;                               // openDialog file path
 HWND hBtnPlay, hBtnWhite, hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue;
+Bitmap* img = NULL;                                     // rendered Animation Bitmap
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -24,6 +25,11 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void openJSONFileDialog(HWND);
 void dlgUICommand(HWND, WPARAM);
 
+// Animation Rendering Functions
+void draw(HDC);
+Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height);
+void renderAnimation(double pos);
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
     _In_ LPWSTR    lpCmdLine,
@@ -32,7 +38,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Place code here.
+    // initialize Gdiplus
+    Gdiplus::GdiplusStartupInput gdiplusStartUpInput;
+    ULONG_PTR gdiplustoken;
+    Gdiplus::GdiplusStartup(&gdiplustoken, &gdiplusStartUpInput, nullptr);
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -59,6 +68,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
+    Gdiplus::GdiplusShutdown(gdiplustoken);
     return (int) msg.wParam;
 }
 
@@ -104,17 +114,17 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     hInst = hInstance; // Store instance handle in our global variable
 
-    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+    mainWindow = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr, nullptr, hInstance, nullptr);
 
-    if (!hWnd)
+    if (!mainWindow)
     {
         return FALSE;
     }
 
-    ShowWindow(hWnd, nCmdShow);
-    UpdateWindow(hWnd);
-    DialogBox(hInst, MAKEINTRESOURCE(MAIN_WINDOW), hWnd, About);
+    ShowWindow(mainWindow, nCmdShow);
+    UpdateWindow(mainWindow);
+    DialogBox(hInst, MAKEINTRESOURCE(MAIN_WINDOW), mainWindow, About);
 
     return TRUE;
 }
@@ -154,13 +164,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
-        // TODO: Add any drawing code that uses hdc here...
+        if (img != NULL) draw(hdc);
         EndPaint(hWnd, &ps);
     }
     break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
+
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
@@ -220,8 +231,8 @@ void openJSONFileDialog(HWND hDlg)
         USES_CONVERSION;
         LPSTR path = W2A(ofn.lpstrFile);
         
-        setAnimation(path, 1, 2);
-        auto res = renderAnimation(0.0);
+        setAnimation(path, 500, 500);
+        renderAnimation(0.0);
     }
 }
 
@@ -252,23 +263,50 @@ void dlgUICommand(HWND hDlg, WPARAM wParam) {
         break;
     }
     case WM_DROPFILES:
-        
         break;
-
     case BTN_WHITE:
-        setColor(1.0, 1.0, 1.0);
         break;
     case BTN_BLACK:
-        setColor(0.0, 0.0, 0.0);
         break;
     case BTN_RED:
-        setColor(1.0, 0.0, 0.0);
         break;
      case BTN_GREEN:
-        setColor(0.0, 1.0, 0.0);
         break;
     case BTN_BLUE:
-        setColor(0.0, 0.0, 1.0);
         break;
     }
+}
+
+void draw(HDC hdc)
+{
+    if (img != NULL)
+    {
+        Gdiplus::Graphics gf(hdc);
+        gf.DrawImage(img, 0, 0, 500, 500);
+    }
+}
+
+Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height)
+{
+    BITMAPINFO Info;
+    memset(&Info, 0, sizeof(Info));
+
+    Info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    Info.bmiHeader.biWidth = width;
+    Info.bmiHeader.biHeight = height;
+    Info.bmiHeader.biPlanes = 1;
+    Info.bmiHeader.biBitCount = 32;
+    Info.bmiHeader.biCompression = BI_RGB;
+    Info.bmiHeader.biSizeImage = 0;  //(((32 * width + 31) & ~31) / 8) * height;
+
+    return new Gdiplus::Bitmap(&Info, data);;
+}
+
+void renderAnimation(double pos)
+{
+    // render
+    auto resRender = renderRLottieAnimation(pos);
+    img = CreateBitmap(resRender->buffer(), resRender->width(), resRender->height());
+    // call WM_PAINT message
+    InvalidateRect(mainWindow, NULL, TRUE);
 }
