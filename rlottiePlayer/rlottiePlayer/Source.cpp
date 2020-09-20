@@ -22,15 +22,3 @@ Surface* renderRLottieAnimation(double pos)
 	anim->renderSync(frameNum, surface);
 	return &surface;
 }
-
-void setColor(float r, float g, float b)
-{
-	if (!anim) return;
-	rValue = r;
-	gValue = g;
-	bValue = b;
-	anim->setValue<Property::FillColor>("Layer1.Box 1.Fill1",
-		[](const FrameInfo& info) {
-			return Color(rValue, gValue, bValue);
-		});
-}
