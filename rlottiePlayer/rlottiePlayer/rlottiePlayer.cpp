@@ -15,7 +15,9 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HWND mainWindow;                                    // Main Window Instance
 HWND hTextFileToBeOpened;                               // openDialog file path
 HWND hBtnPlay, hBtnWhite, hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue;
+HWND hSliderPlay;
 Bitmap* img = NULL;                                     // rendered Animation Bitmap
+double curFrame = 0.0;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -23,12 +25,13 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void openJSONFileDialog(HWND);
+void initUIControl(HWND);
 void dlgUICommand(HWND, WPARAM);
 
 // Animation Rendering Functions
 void draw(HDC);
 Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height);
-void renderAnimation(double pos);
+void renderAnimation();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -185,13 +188,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_INITDIALOG:
-        hTextFileToBeOpened = GetDlgItem(hDlg, TEXT_FILENAME);
-        hBtnPlay = GetDlgItem(hDlg, BTN_PLAY);
-        hBtnWhite = GetDlgItem(hDlg, BTN_WHITE);
-        hBtnBlack = GetDlgItem(hDlg, BTN_BLACK);
-        hBtnRed = GetDlgItem(hDlg, BTN_RED);
-        hBtnGreen = GetDlgItem(hDlg, BTN_GREEN);
-        hBtnBlue = GetDlgItem(hDlg, BTN_BLUE);
+        initUIControl(hDlg);
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
@@ -232,7 +229,11 @@ void openJSONFileDialog(HWND hDlg)
         LPSTR path = W2A(ofn.lpstrFile);
         
         setAnimation(path, 500, 500);
-        renderAnimation(0.0);
+        // init play slider control
+        SendMessage(hSliderPlay, TBM_SETRANGE, FALSE, MAKELPARAM(0, getTotalFrame() - 1));
+        SendMessage(hSliderPlay, TBM_SETPOS, TRUE, 0);
+        curFrame = 0.0;
+        renderAnimation();
     }
 }
 
@@ -302,12 +303,26 @@ Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height)
     return new Gdiplus::Bitmap(&Info, data);
 }
 
-void renderAnimation(double pos)
+void renderAnimation()
 {
     // render
-    auto resRender = renderRLottieAnimation(pos);
+    auto resRender = renderRLottieAnimation(curFrame);
     img = CreateBitmap(resRender->buffer(), resRender->width(), resRender->height());
     img->RotateFlip(RotateNoneFlipY);
     // call WM_PAINT message
     InvalidateRect(mainWindow, NULL, TRUE);
+}
+
+void initUIControl(HWND hDlg)
+{
+    hTextFileToBeOpened = GetDlgItem(hDlg, TEXT_FILENAME);
+    hBtnPlay = GetDlgItem(hDlg, BTN_PLAY);
+    hBtnWhite = GetDlgItem(hDlg, BTN_WHITE);
+    hBtnBlack = GetDlgItem(hDlg, BTN_BLACK);
+    hBtnRed = GetDlgItem(hDlg, BTN_RED);
+    hBtnGreen = GetDlgItem(hDlg, BTN_GREEN);
+    hBtnBlue = GetDlgItem(hDlg, BTN_BLUE);
+
+    // play
+    hSliderPlay = GetDlgItem(hDlg, SLIDER_PLAY);
 }

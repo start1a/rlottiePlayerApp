@@ -22,3 +22,8 @@ Surface* renderRLottieAnimation(double pos)
 	anim->renderSync(frameNum, surface);
 	return &surface;
 }
+
+size_t getTotalFrame()
+{
+	return anim->totalFrame();
+}
