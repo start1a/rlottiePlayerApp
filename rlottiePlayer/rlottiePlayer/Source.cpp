@@ -22,6 +22,11 @@ Surface* renderRLottieAnimation(unsigned int frameNum)
 	return &surface;
 }
 
+//unsigned int intervalAnimation()
+//{
+//	return anim->duration() / anim->frameRate() * 1000;
+//}
+
 size_t getTotalFrame()
 {
 	return anim->totalFrame();

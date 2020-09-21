@@ -24,7 +24,8 @@ using namespace rlottie;
 
 void setAnimation(char* path, size_t w, size_t h);
 void setColor(float r, float g, float b);
-Surface* renderRLottieAnimation(UINT frameNum);
+Surface* renderRLottieAnimation(unsigned int frameNum);
+// unsigned int intervalAnimation();
 size_t getTotalFrame();
 bool isAnimNULL();
 

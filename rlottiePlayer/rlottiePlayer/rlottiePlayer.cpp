@@ -162,7 +162,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case TIMER_PLAY_ANIM:
         {
             renderAnimation(curFrame + 1);
-            InvalidateRect(hWnd, &animRect, TRUE);
             SendMessage(hSliderPlay, TBM_SETPOS, TRUE, curFrame);
             break;
         }
@@ -202,7 +201,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 isplay = true;
                 textBtnPlay = A2W("Pause");
-                SetTimer(hWnd, TIMER_PLAY_ANIM, 100, NULL);
+                SetTimer(hWnd, TIMER_PLAY_ANIM, 10, NULL);
             }
             SetWindowText(hBtnPlay, textBtnPlay);
             break;
@@ -355,7 +354,7 @@ void renderAnimation(UINT frameNum)
     anim.image = CreateBitmap(resRender->buffer(), resRender->width(), resRender->height());
     anim.image->RotateFlip(RotateNoneFlipY);
     // call WM_PAINT message
-    InvalidateRect(mainWindow, &animRect, TRUE);
+    InvalidateRect(mainWindow, &animRect, FALSE);
 }
 
 void initUIControl(HWND hWnd)
