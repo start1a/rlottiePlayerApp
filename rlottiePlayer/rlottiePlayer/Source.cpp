@@ -12,6 +12,8 @@ void setAnimation(char* path, size_t w, size_t h)
 
 Surface* renderRLottieAnimation(unsigned int frameNum)
 {
+	if (anim == NULL) return NULL;
+
 	size_t width = 500;
 	size_t height = 500;
 	size_t bytesPerLine = width * sizeof(uint32_t);

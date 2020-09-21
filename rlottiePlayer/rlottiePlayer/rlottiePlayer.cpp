@@ -316,6 +316,8 @@ void renderAnimation(UINT frameNum)
     // render
     curFrame = frameNum;
     auto resRender = renderRLottieAnimation(curFrame);
+    if (resRender == NULL) return;
+
     anim.image = CreateBitmap(resRender->buffer(), resRender->width(), resRender->height());
     anim.image->RotateFlip(RotateNoneFlipY);
     // call WM_PAINT message
