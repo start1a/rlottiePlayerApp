@@ -18,7 +18,10 @@ HWND hBtnPlay;
 HWND hSliderPlay, hSliderCanvasResize;
 UINT curFrame = 0;
 RlottieBitmap anim;                                          // rendered Animation Bitmap
-RECT animRect;
+RECT animRect, backRect;
+Gdiplus::Color backColor(255, 255, 255, 255);
+Gdiplus::Color borderColor(255, 0, 0, 0);
+bool isBackgroundChanged = false;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -29,6 +32,7 @@ void openJSONFileDialog(HWND);
 void initUIControl(HWND);
 void dlgUICommand(HWND, WPARAM);
 void resizeCanvas(HWND, int);
+void changeBackgroundColor(Gdiplus::Color backgroundColor, Gdiplus::Color borderlineColor);
 
 // Animation Rendering Functions
 void draw(HDC);
@@ -129,6 +133,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     ShowWindow(mainWindow, nCmdShow);
     UpdateWindow(mainWindow);
+    SetMenu(mainWindow, NULL);
 
     return TRUE;
 }
@@ -211,14 +216,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_DROPFILES:
             break;
         case BTN_WHITE:
+            changeBackgroundColor(Gdiplus::Color(255, 255, 255), Gdiplus::Color(0, 0, 0));
             break;
         case BTN_BLACK:
+            changeBackgroundColor(Gdiplus::Color(0, 0, 0), Gdiplus::Color(255, 255, 255));
             break;
         case BTN_RED:
+            changeBackgroundColor(Gdiplus::Color(255, 0, 0), Gdiplus::Color(0, 0, 0));
             break;
         case BTN_GREEN:
+            changeBackgroundColor(Gdiplus::Color(0, 255, 0), Gdiplus::Color(0, 0, 0));
             break;
         case BTN_BLUE:
+            changeBackgroundColor(Gdiplus::Color(0, 0, 255), Gdiplus::Color(0, 0, 0));
             break;
 
         default:
@@ -320,13 +330,27 @@ void openJSONFileDialog(HWND hDlg)
 void draw(HDC hdc)
 {
     Graphics gf(hdc);
-    Pen pen(Gdiplus::Color(255, 0, 0, 0));
+    int half_interval = UI_INTERVAL / 2;
+
+    // background
+    SolidBrush brush(backColor);
+    int back_y = half_interval + BTN_HEIGHT;
+    int back_height = back_y + WND_WIDTH / 2 + UI_INTERVAL;
+    if (isBackgroundChanged)
+    {
+        isBackgroundChanged = false;
+        gf.FillRectangle(&brush, 0, back_y, WND_WIDTH, back_height);
+    }
+    
+    // image borderline
+    Pen pen(borderColor);
+    gf.DrawRectangle(&pen, anim.x - half_interval, anim.y - half_interval, anim.width + half_interval * 2, anim.height + half_interval * 2);
+
+    // image
     if (anim.image != NULL)
     {
         gf.DrawImage(anim.image, anim.x, anim.y, anim.width, anim.height);
     }
-    int interval = UI_INTERVAL / 2;
-    gf.DrawRectangle(&pen, anim.x - interval, anim.y - interval, anim.width + interval * 2, anim.height + interval * 2);
 }
 
 Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height)
@@ -372,7 +396,7 @@ void initUIControl(HWND hWnd)
 
     // button browse
     int browse_x = UI_INTERVAL;
-    int browse_y = UI_INTERVAL;
+    int browse_y = half_ui_interval;
     CreateWindow(L"button", L"Browse", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         browse_x, browse_y, BTN_WIDTH, BTN_HEIGHT, hWnd, (HMENU)BTN_BROWSE, hInst, NULL);
 
@@ -384,7 +408,7 @@ void initUIControl(HWND hWnd)
 
     // image
     anim.x = WND_WIDTH / 4;
-    anim.y = browse_y + BTN_HEIGHT + UI_INTERVAL;
+    anim.y = browse_y + BTN_HEIGHT + UI_INTERVAL * 2;
     anim.width = WND_WIDTH / 2;
     anim.height = anim.width;
     
@@ -396,9 +420,16 @@ void initUIControl(HWND hWnd)
         anim.y + anim.height + UI_INTERVAL * 2
     );
 
+    // background range
+    SetRect(&backRect,
+        0,
+        anim.y - UI_INTERVAL,
+        WND_WIDTH,
+        anim.y + anim.height + UI_INTERVAL * 2);
+
     // text Background Color
     int textBC_x = WND_WIDTH / 20;
-    int textBC_y = anim.y + anim.height + UI_INTERVAL;
+    int textBC_y = anim.y + anim.height + UI_INTERVAL * 2;
     CreateWindow(L"static", L"Background Color", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN,
         textBC_x, textBC_y, 120, TEXT_HEIGHT, hWnd, (HMENU)TEXT_FILENAME, hInst, 0);
 
@@ -433,6 +464,8 @@ void initUIControl(HWND hWnd)
     CreateWindowEx(0, L"button", L"Blue", WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
         blue_x, blue_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_BLUE, hInst, NULL);
 
+    CheckRadioButton(hWnd, BTN_WHITE, BTN_BLUE, BTN_WHITE);
+
     // text Canvas Resize
     int textCR_x = WND_WIDTH / 2;
     int textCR_y = textBC_y;
@@ -465,9 +498,18 @@ void initUIControl(HWND hWnd)
 
 void resizeCanvas(HWND hWnd, int resizeValue)
 {
+    isBackgroundChanged = true;
     anim.x += resizeValue / 2;
     anim.y += resizeValue / 2;
     anim.width -= resizeValue;
     anim.height -= resizeValue;
     InvalidateRect(hWnd, &animRect, TRUE);
+}
+
+void changeBackgroundColor(Gdiplus::Color backgroundColor, Gdiplus::Color borderlineColor)
+{
+    isBackgroundChanged = true;
+    backColor = backgroundColor;
+    borderColor = borderlineColor;
+    InvalidateRect(mainWindow, &backRect, FALSE);
 }
