@@ -248,7 +248,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
-        if (anim.image != NULL) draw(hdc);
+        draw(hdc);
         EndPaint(hWnd, &ps);
     }
     break;
@@ -318,11 +318,14 @@ void openJSONFileDialog(HWND hDlg)
 
 void draw(HDC hdc)
 {
+    Graphics gf(hdc);
+    Pen pen(Gdiplus::Color(255, 0, 0, 0));
     if (anim.image != NULL)
     {
-        Gdiplus::Graphics gf(hdc);
         gf.DrawImage(anim.image, anim.x, anim.y, anim.width, anim.height);
     }
+    int interval = UI_INTERVAL / 2;
+    gf.DrawRectangle(&pen, anim.x - interval, anim.y - interval, anim.width + interval * 2, anim.height + interval * 2);
 }
 
 Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height)
@@ -380,7 +383,12 @@ void initUIControl(HWND hWnd)
     anim.height = anim.width;
     
     // animating range
-    SetRect(&animRect, anim.x, anim.y, anim.x + anim.width, anim.y + anim.height);
+    SetRect(&animRect,
+        anim.x - UI_INTERVAL,
+        anim.y - UI_INTERVAL,
+        anim.x + anim.width + UI_INTERVAL * 2,
+        anim.y + anim.height + UI_INTERVAL * 2
+    );
 
     // text Background Color
     int textBC_x = WND_WIDTH / 20;
