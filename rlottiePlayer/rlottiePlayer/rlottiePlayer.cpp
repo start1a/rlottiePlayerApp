@@ -31,7 +31,7 @@ void dlgUICommand(HWND, WPARAM);
 // Animation Rendering Functions
 void draw(HDC);
 Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height);
-void renderAnimation();
+void renderAnimation(UINT);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -207,6 +207,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     break;
 
+    case WM_HSCROLL:
+    {
+        UINT frameNum = SendDlgItemMessage(hWnd, SLIDER_PLAY, TBM_GETPOS, 0, 0);
+        renderAnimation(frameNum);
+        break;
+    }
+
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
@@ -275,8 +282,7 @@ void openJSONFileDialog(HWND hDlg)
         // init play slider control
         SendMessage(hSliderPlay, TBM_SETRANGE, FALSE, MAKELPARAM(0, getTotalFrame() - 1));
         SendMessage(hSliderPlay, TBM_SETPOS, TRUE, 0);
-        curFrame = 0.0;
-        renderAnimation();
+        renderAnimation(0);
     }
 }
 
@@ -305,9 +311,10 @@ Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height)
     return new Gdiplus::Bitmap(&Info, data);
 }
 
-void renderAnimation()
+void renderAnimation(UINT frameNum)
 {
     // render
+    curFrame = frameNum;
     auto resRender = renderRLottieAnimation(curFrame);
     anim.image = CreateBitmap(resRender->buffer(), resRender->width(), resRender->height());
     anim.image->RotateFlip(RotateNoneFlipY);

@@ -10,9 +10,8 @@ void setAnimation(char* path, size_t w, size_t h)
 	anim->size(w, h);
 }
 
-Surface* renderRLottieAnimation(double pos)
+Surface* renderRLottieAnimation(unsigned int frameNum)
 {
-	auto frameNum = anim->frameAtPos(pos);
 	size_t width = 500;
 	size_t height = 500;
 	size_t bytesPerLine = width * sizeof(uint32_t);
