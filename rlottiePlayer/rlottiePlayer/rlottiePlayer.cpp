@@ -18,6 +18,7 @@ HWND hBtnPlay;
 HWND hSliderPlay, hSliderCanvasResize;
 UINT curFrame = 0;
 RlottieBitmap anim;                                          // rendered Animation Bitmap
+RECT animRect;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -152,6 +153,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         initUIControl(hWnd);
         break;
     }
+    case WM_TIMER:
+    {
+        renderAnimation(curFrame + 1);
+        InvalidateRect(hWnd, &animRect, TRUE);
+        SendMessage(hSliderPlay, TBM_SETPOS, TRUE, curFrame);
+        break;
+    }
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
@@ -178,11 +186,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 isplay = false;
                 textBtnPlay = A2W("Play");
+                KillTimer(hWnd, TIMER_PLAY_ANIM);
             }
             else
             {
                 isplay = true;
                 textBtnPlay = A2W("Pause");
+                SetTimer(hWnd, TIMER_PLAY_ANIM, 100, NULL);
             }
             SetWindowText(hBtnPlay, textBtnPlay);
             break;
@@ -313,15 +323,18 @@ Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height)
 
 void renderAnimation(UINT frameNum)
 {
-    // render
-    curFrame = frameNum;
-    auto resRender = renderRLottieAnimation(curFrame);
-    if (resRender == NULL) return;
+    if (isAnimNULL()) return;
 
+    curFrame = frameNum;
+    if (curFrame >= getTotalFrame() - 1)
+        curFrame = 0;
+
+    // render
+    auto resRender = renderRLottieAnimation(curFrame);
     anim.image = CreateBitmap(resRender->buffer(), resRender->width(), resRender->height());
     anim.image->RotateFlip(RotateNoneFlipY);
     // call WM_PAINT message
-    InvalidateRect(mainWindow, NULL, TRUE);
+    InvalidateRect(mainWindow, &animRect, TRUE);
 }
 
 void initUIControl(HWND hWnd)
@@ -345,6 +358,9 @@ void initUIControl(HWND hWnd)
     anim.y = browse_y + BTN_HEIGHT + UI_INTERVAL;
     anim.width = WND_WIDTH / 2;
     anim.height = anim.width;
+    
+    // animating range
+    SetRect(&animRect, anim.x, anim.y, anim.x + anim.width, anim.y + anim.height);
 
     // text Background Color
     int textBC_x = WND_WIDTH / 20;

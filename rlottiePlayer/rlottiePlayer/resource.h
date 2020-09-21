@@ -12,7 +12,6 @@
 #define IDI_SMALL                       108
 #define IDC_RLOTTIEPLAYER               109
 #define IDR_MAINFRAME                   128
-#define IDD_DIALOG1                     130
 #define MAIN_WINDOW                     130
 #define BTN_BROWSE                      1004
 #define BTN_WHITE                       1005
@@ -20,11 +19,12 @@
 #define BTN_RED                         1007
 #define BTN_GREEN                       1008
 #define BTN_BLUE                        1009
-#define SLIDER_CANVAS_RESIZE            1010
+#define SLIDER_CANVAS_RESIZE			1010
 #define BTN_PLAY                        1011
 #define SLIDER_PLAY                     1012
 #define TEXT_FILENAME                   1013
 #define PICCTRL_RLOTTIE                 1014
+#define TIMER_PLAY_ANIM				1015
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
