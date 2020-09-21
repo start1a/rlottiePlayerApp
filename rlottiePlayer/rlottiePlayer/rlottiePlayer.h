@@ -23,7 +23,7 @@ using namespace rlottie;
 #define RESIZE_LENGTH 10
 
 void setAnimation(char* path, size_t w, size_t h);
-void setColor(float r, float g, float b);
+void initAnimation();
 Surface* renderRLottieAnimation(unsigned int frameNum);
 // unsigned int intervalAnimation();
 size_t getTotalFrame();

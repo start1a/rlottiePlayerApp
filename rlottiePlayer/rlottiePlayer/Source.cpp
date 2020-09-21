@@ -2,7 +2,16 @@
 using namespace rlottie;
 
 std::unique_ptr<Animation> anim;
-float rValue = 0.0, gValue = 0.0, bValue = 0.0;
+uint32_t* buffer;
+Surface surface;
+size_t width = 500;
+size_t height = 500;
+size_t bytesPerLine = width * sizeof(uint32_t);
+
+void initAnimation()
+{
+	buffer = (uint32_t*)calloc(bytesPerLine * height, sizeof(uint32_t));
+}
 
 void setAnimation(char* path, size_t w, size_t h)
 {
@@ -12,12 +21,7 @@ void setAnimation(char* path, size_t w, size_t h)
 
 Surface* renderRLottieAnimation(unsigned int frameNum)
 {
-	size_t width = 500;
-	size_t height = 500;
-	size_t bytesPerLine = width * sizeof(uint32_t);
-	uint32_t* buffer = (uint32_t*)calloc(bytesPerLine * height, sizeof(uint32_t));
-	rlottie::Surface surface(buffer, width, height, bytesPerLine);
-
+	surface = Surface(buffer, width, height, bytesPerLine);
 	anim->renderSync(frameNum, surface);
 	return &surface;
 }

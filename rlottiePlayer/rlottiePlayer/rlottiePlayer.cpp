@@ -153,6 +153,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
     {
         initUIControl(hWnd);
+        initAnimation();
         break;
     }
     case WM_TIMER:
@@ -348,6 +349,11 @@ void renderAnimation(UINT frameNum)
 {
     if (isAnimNULL()) return;
 
+    if (anim.image != NULL)
+    {
+        delete anim.image;
+    }
+
     curFrame = frameNum;
     if (curFrame >= getTotalFrame())
         curFrame = 0;
@@ -400,31 +406,31 @@ void initUIControl(HWND hWnd)
     // white
     int white_x = WND_WIDTH / 20;
     int white_y = textBC_y + TEXT_HEIGHT + half_ui_interval;
-    CreateWindowEx(0, L"button", L"White", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+    CreateWindowEx(0, L"button", L"White", WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
         white_x, white_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_WHITE, hInst, NULL);
 
     // black
     int black_x = white_x + RDOBTN_WIDTH + half_ui_interval;
     int black_y = white_y;
-    CreateWindowEx(0, L"button", L"Black", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+    CreateWindowEx(0, L"button", L"Black", WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
         black_x, black_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_BLACK, hInst, NULL);
 
     // red
     int red_x = black_x + RDOBTN_WIDTH + half_ui_interval;
     int red_y = white_y;
-    CreateWindowEx(0, L"button", L"Red", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+    CreateWindowEx(0, L"button", L"Red", WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
         red_x, red_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_RED, hInst, NULL);
 
     // green
     int green_x = red_x + RDOBTN_WIDTH + half_ui_interval;
     int green_y = white_y;
-    CreateWindowEx(0, L"button", L"Green", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+    CreateWindowEx(0, L"button", L"Green", WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
         green_x, green_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_GREEN, hInst, NULL);
 
     // blue
     int blue_x = green_x + RDOBTN_WIDTH + half_ui_interval;
     int blue_y = white_y;
-    CreateWindowEx(0, L"button", L"Blue", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+    CreateWindowEx(0, L"button", L"Blue", WS_VISIBLE | WS_CHILD | BS_AUTORADIOBUTTON,
         blue_x, blue_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_BLUE, hInst, NULL);
 
     // text Canvas Resize
