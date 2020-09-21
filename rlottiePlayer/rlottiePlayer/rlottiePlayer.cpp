@@ -28,6 +28,7 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 void openJSONFileDialog(HWND);
 void initUIControl(HWND);
 void dlgUICommand(HWND, WPARAM);
+void resizeCanvas(HWND, int);
 
 // Animation Rendering Functions
 void draw(HDC);
@@ -145,6 +146,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static bool isplay = false;
+    int wmId = LOWORD(wParam);
 
     switch (message)
     {
@@ -155,14 +157,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     case WM_TIMER:
     {
-        renderAnimation(curFrame + 1);
-        InvalidateRect(hWnd, &animRect, TRUE);
-        SendMessage(hSliderPlay, TBM_SETPOS, TRUE, curFrame);
+        switch (wmId)
+        {
+        case TIMER_PLAY_ANIM:
+        {
+            renderAnimation(curFrame + 1);
+            InvalidateRect(hWnd, &animRect, TRUE);
+            SendMessage(hSliderPlay, TBM_SETPOS, TRUE, curFrame);
+            break;
+        }
+        default:
+            break;
+        }
         break;
     }
     case WM_COMMAND:
     {
-        int wmId = LOWORD(wParam);
         // Parse the menu selections:
         switch (wmId)
         {
@@ -219,8 +229,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_HSCROLL:
     {
-        UINT frameNum = SendDlgItemMessage(hWnd, SLIDER_PLAY, TBM_GETPOS, 0, 0);
-        renderAnimation(frameNum);
+        static UINT curSize;
+        if ((lParam != 0) && (reinterpret_cast<HWND>(lParam) == hSliderPlay))
+        {
+            UINT frameNum = SendDlgItemMessage(hWnd, SLIDER_PLAY, TBM_GETPOS, 0, 0);
+            renderAnimation(frameNum);
+        }
+        else
+        {
+            static int curSize = anim.width / RESIZE_LENGTH;
+            int newSize = SendDlgItemMessage(hWnd, SLIDER_CANVAS_RESIZE, TBM_GETPOS, 0, 0);
+            resizeCanvas(hWnd, (curSize - newSize) * RESIZE_LENGTH);
+            curSize = newSize;
+        }
         break;
     }
 
@@ -289,8 +310,8 @@ void openJSONFileDialog(HWND hDlg)
         LPSTR path = W2A(ofn.lpstrFile);
         
         setAnimation(path, 500, 500);
-        // init play slider control
-        SendMessage(hSliderPlay, TBM_SETRANGE, FALSE, MAKELPARAM(0, getTotalFrame() - 1));
+        // init play slider
+        SendMessage(hSliderPlay, TBM_SETRANGE, FALSE, MAKELPARAM(0, getTotalFrame()));
         SendMessage(hSliderPlay, TBM_SETPOS, TRUE, 0);
         renderAnimation(0);
     }
@@ -326,7 +347,7 @@ void renderAnimation(UINT frameNum)
     if (isAnimNULL()) return;
 
     curFrame = frameNum;
-    if (curFrame >= getTotalFrame() - 1)
+    if (curFrame >= getTotalFrame())
         curFrame = 0;
 
     // render
@@ -411,6 +432,11 @@ void initUIControl(HWND hWnd)
     hSliderCanvasResize = CreateWindowExW(0, TRACKBAR_CLASSW, NULL, WS_CHILD | WS_VISIBLE | TBS_FIXEDLENGTH | TBS_NOTICKS,
         sliderCR_x, sliderCR_y, WND_WIDTH * 0.2, SLIDER_HEIGHT, hWnd, (HMENU)SLIDER_CANVAS_RESIZE, hInst, NULL);
 
+    // init resize slider
+    UINT sizeSlider = anim.width / RESIZE_LENGTH;
+    SendMessage(hSliderCanvasResize, TBM_SETRANGE, FALSE, MAKELPARAM(0, sizeSlider));
+    SendMessage(hSliderCanvasResize, TBM_SETPOS, TRUE, sizeSlider);
+
     // button play
     int btnPlay_x = WND_WIDTH / 10;
     int btnPlay_y = red_y + RDOBTN_HEIGHT + UI_INTERVAL * 2;
@@ -422,4 +448,13 @@ void initUIControl(HWND hWnd)
     int sliderPlay_y = btnPlay_y;
     hSliderPlay = CreateWindowExW(0, TRACKBAR_CLASSW, NULL, WS_CHILD | WS_VISIBLE | TBS_FIXEDLENGTH | TBS_NOTICKS,
         sliderPlay_x, sliderPlay_y, WND_WIDTH * 0.6, SLIDER_HEIGHT, hWnd, (HMENU)SLIDER_PLAY, hInst, NULL);
+}
+
+void resizeCanvas(HWND hWnd, int resizeValue)
+{
+    anim.x += resizeValue / 2;
+    anim.y += resizeValue / 2;
+    anim.width -= resizeValue;
+    anim.height -= resizeValue;
+    InvalidateRect(hWnd, &animRect, TRUE);
 }

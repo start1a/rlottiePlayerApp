@@ -20,6 +20,7 @@ using namespace rlottie;
 #define SLIDER_HEIGHT 25
 #define RDOBTN_WIDTH 60
 #define RDOBTN_HEIGHT 20
+#define RESIZE_LENGTH 10
 
 void setAnimation(char* path, size_t w, size_t h);
 void setColor(float r, float g, float b);
