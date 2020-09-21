@@ -14,10 +14,10 @@ WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 HWND mainWindow;                                    // Main Window Instance
 HWND hTextFileToBeOpened;                               // openDialog file path
-HWND hBtnPlay, hBtnWhite, hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue;
-HWND hSliderPlay;
-Bitmap* img = NULL;                                     // rendered Animation Bitmap
-double curFrame = 0.0;
+HWND hBtnPlay;
+HWND hSliderPlay, hSliderCanvasResize;
+UINT curFrame = 0;
+RlottieBitmap anim;                                          // rendered Animation Bitmap
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -118,7 +118,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hInst = hInstance; // Store instance handle in our global variable
 
     mainWindow = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, CW_USEDEFAULT, WND_WIDTH, WND_HEIGHT, nullptr, nullptr, hInstance, nullptr);
 
     if (!mainWindow)
     {
@@ -127,7 +127,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     ShowWindow(mainWindow, nCmdShow);
     UpdateWindow(mainWindow);
-    DialogBox(hInst, MAKEINTRESOURCE(MAIN_WINDOW), mainWindow, About);
 
     return TRUE;
 }
@@ -144,8 +143,15 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    static bool isplay = false;
+
     switch (message)
     {
+    case WM_CREATE:
+    {
+        initUIControl(hWnd);
+        break;
+    }
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
@@ -155,22 +161,61 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
+
         case IDM_EXIT:
             DestroyWindow(hWnd);
             break;
+
+        case BTN_BROWSE:
+            openJSONFileDialog(hWnd);
+            break;
+
+        case BTN_PLAY:
+        {
+            LPWSTR textBtnPlay;
+            USES_CONVERSION;
+            if (isplay)
+            {
+                isplay = false;
+                textBtnPlay = A2W("Play");
+            }
+            else
+            {
+                isplay = true;
+                textBtnPlay = A2W("Pause");
+            }
+            SetWindowText(hBtnPlay, textBtnPlay);
+            break;
+        }
+
+        case WM_DROPFILES:
+            break;
+        case BTN_WHITE:
+            break;
+        case BTN_BLACK:
+            break;
+        case BTN_RED:
+            break;
+        case BTN_GREEN:
+            break;
+        case BTN_BLUE:
+            break;
+
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
     }
     break;
+
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
-        if (img != NULL) draw(hdc);
+        if (anim.image != NULL) draw(hdc);
         EndPaint(hWnd, &ps);
     }
     break;
+
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
@@ -188,7 +233,6 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_INITDIALOG:
-        initUIControl(hDlg);
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
@@ -197,7 +241,6 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
         }
-        else dlgUICommand(hDlg, wParam);
         break;
     }
     return (INT_PTR)FALSE;
@@ -237,53 +280,12 @@ void openJSONFileDialog(HWND hDlg)
     }
 }
 
-void dlgUICommand(HWND hDlg, WPARAM wParam) {
-    static bool isplay = false;
-
-    switch (LOWORD(wParam))
-    {
-    case BTN_BROWSE:
-        openJSONFileDialog(hDlg);
-        break;
-
-    case BTN_PLAY:
-    {
-        LPWSTR textBtnPlay;
-        USES_CONVERSION;
-        if (isplay)
-        {
-            isplay = false;
-            textBtnPlay = A2W("pause");
-        }
-        else
-        {
-            isplay = true;
-            textBtnPlay = A2W("play");
-        }
-        SetWindowText(hBtnPlay, textBtnPlay);
-        break;
-    }
-    case WM_DROPFILES:
-        break;
-    case BTN_WHITE:
-        break;
-    case BTN_BLACK:
-        break;
-    case BTN_RED:
-        break;
-     case BTN_GREEN:
-        break;
-    case BTN_BLUE:
-        break;
-    }
-}
-
 void draw(HDC hdc)
 {
-    if (img != NULL)
+    if (anim.image != NULL)
     {
         Gdiplus::Graphics gf(hdc);
-        gf.DrawImage(img, 0, 0, 500, 500);
+        gf.DrawImage(anim.image, anim.x, anim.y, anim.width, anim.height);
     }
 }
 
@@ -307,22 +309,92 @@ void renderAnimation()
 {
     // render
     auto resRender = renderRLottieAnimation(curFrame);
-    img = CreateBitmap(resRender->buffer(), resRender->width(), resRender->height());
-    img->RotateFlip(RotateNoneFlipY);
+    anim.image = CreateBitmap(resRender->buffer(), resRender->width(), resRender->height());
+    anim.image->RotateFlip(RotateNoneFlipY);
     // call WM_PAINT message
     InvalidateRect(mainWindow, NULL, TRUE);
 }
 
-void initUIControl(HWND hDlg)
+void initUIControl(HWND hWnd)
 {
-    hTextFileToBeOpened = GetDlgItem(hDlg, TEXT_FILENAME);
-    hBtnPlay = GetDlgItem(hDlg, BTN_PLAY);
-    hBtnWhite = GetDlgItem(hDlg, BTN_WHITE);
-    hBtnBlack = GetDlgItem(hDlg, BTN_BLACK);
-    hBtnRed = GetDlgItem(hDlg, BTN_RED);
-    hBtnGreen = GetDlgItem(hDlg, BTN_GREEN);
-    hBtnBlue = GetDlgItem(hDlg, BTN_BLUE);
+    int half_ui_interval = UI_INTERVAL / 2;
 
-    // play
-    hSliderPlay = GetDlgItem(hDlg, SLIDER_PLAY);
+    // button browse
+    int browse_x = UI_INTERVAL;
+    int browse_y = UI_INTERVAL;
+    CreateWindow(L"button", L"Browse", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        browse_x, browse_y, BTN_WIDTH, BTN_HEIGHT, hWnd, (HMENU)BTN_BROWSE, hInst, NULL);
+
+    // textbox FilePath
+    int textFile_x = browse_x + BTN_WIDTH + UI_INTERVAL;
+    int textFile_y = browse_y;
+    hTextFileToBeOpened = CreateWindow(L"static", L"No file selected.", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN,
+        textFile_x, textFile_y, WND_WIDTH * 0.6, TEXT_HEIGHT, hWnd, (HMENU)TEXT_FILENAME, hInst, 0);
+
+    // image
+    anim.x = WND_WIDTH / 4;
+    anim.y = browse_y + BTN_HEIGHT + UI_INTERVAL;
+    anim.width = WND_WIDTH / 2;
+    anim.height = anim.width;
+
+    // text Background Color
+    int textBC_x = WND_WIDTH / 20;
+    int textBC_y = anim.y + anim.height + UI_INTERVAL;
+    CreateWindow(L"static", L"Background Color", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN,
+        textBC_x, textBC_y, 120, TEXT_HEIGHT, hWnd, (HMENU)TEXT_FILENAME, hInst, 0);
+
+    // radio button
+    // white
+    int white_x = WND_WIDTH / 20;
+    int white_y = textBC_y + TEXT_HEIGHT + half_ui_interval;
+    CreateWindowEx(0, L"button", L"White", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+        white_x, white_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_WHITE, hInst, NULL);
+
+    // black
+    int black_x = white_x + RDOBTN_WIDTH + half_ui_interval;
+    int black_y = white_y;
+    CreateWindowEx(0, L"button", L"Black", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+        black_x, black_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_BLACK, hInst, NULL);
+
+    // red
+    int red_x = black_x + RDOBTN_WIDTH + half_ui_interval;
+    int red_y = white_y;
+    CreateWindowEx(0, L"button", L"Red", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+        red_x, red_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_RED, hInst, NULL);
+
+    // green
+    int green_x = red_x + RDOBTN_WIDTH + half_ui_interval;
+    int green_y = white_y;
+    CreateWindowEx(0, L"button", L"Green", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+        green_x, green_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_GREEN, hInst, NULL);
+
+    // blue
+    int blue_x = green_x + RDOBTN_WIDTH + half_ui_interval;
+    int blue_y = white_y;
+    CreateWindowEx(0, L"button", L"Blue", WS_VISIBLE | WS_CHILD | BS_RADIOBUTTON,
+        blue_x, blue_y, RDOBTN_WIDTH, RDOBTN_HEIGHT, hWnd, (HMENU)BTN_BLUE, hInst, NULL);
+
+    // text Canvas Resize
+    int textCR_x = WND_WIDTH / 2;
+    int textCR_y = textBC_y;
+    CreateWindow(L"static", L"Canvas Resize", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN,
+        textCR_x, textCR_y, 120, TEXT_HEIGHT, hWnd, (HMENU)TEXT_FILENAME, hInst, 0);
+
+    // slider Canvas Resize
+    int sliderCR_x = textCR_x;
+    int sliderCR_y = textCR_y + TEXT_HEIGHT + half_ui_interval;
+    hSliderCanvasResize = CreateWindowExW(0, TRACKBAR_CLASSW, NULL, WS_CHILD | WS_VISIBLE | TBS_FIXEDLENGTH | TBS_NOTICKS,
+        sliderCR_x, sliderCR_y, WND_WIDTH * 0.2, SLIDER_HEIGHT, hWnd, (HMENU)SLIDER_CANVAS_RESIZE, hInst, NULL);
+
+    // button play
+    int btnPlay_x = WND_WIDTH / 10;
+    int btnPlay_y = red_y + RDOBTN_HEIGHT + UI_INTERVAL * 2;
+    hBtnPlay = CreateWindow(L"button", L"Play", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        btnPlay_x, btnPlay_y, BTN_WIDTH, BTN_HEIGHT, hWnd, (HMENU)BTN_PLAY, hInst, NULL);
+
+    // slider play
+    int sliderPlay_x = btnPlay_x + BTN_WIDTH + UI_INTERVAL;
+    int sliderPlay_y = btnPlay_y;
+    hSliderPlay = CreateWindowExW(0, TRACKBAR_CLASSW, NULL, WS_CHILD | WS_VISIBLE | TBS_FIXEDLENGTH | TBS_NOTICKS,
+        sliderPlay_x, sliderPlay_y, WND_WIDTH * 0.6, SLIDER_HEIGHT, hWnd, (HMENU)SLIDER_PLAY, hInst, NULL);
 }
