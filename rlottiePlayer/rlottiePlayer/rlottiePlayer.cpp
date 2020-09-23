@@ -264,6 +264,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         EndPaint(hWnd, &ps);
     }
     break;
+    case WM_CTLCOLORSTATIC:
+    {
+        static HBRUSH hBrushEdit = CreateSolidBrush(RGB(255, 255, 255));
+        return (LRESULT)hBrushEdit;
+    }
 
     case WM_DESTROY:
         PostQuitMessage(0);
@@ -398,7 +403,7 @@ void initUIControl(HWND hWnd)
     // textbox FilePath
     int textFile_x = browse_x + BTN_WIDTH + UI_INTERVAL;
     int textFile_y = browse_y;
-    hTextFileToBeOpened = CreateWindow(L"static", L"No file selected.", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN,
+    hTextFileToBeOpened = CreateWindowEx(0, L"static", L"No file selected.", WS_CHILD | WS_VISIBLE | ES_LEFT,
         textFile_x, textFile_y, WND_WIDTH * 0.6, TEXT_HEIGHT, hWnd, (HMENU)TEXT_FILENAME, hInst, 0);
 
     // image
@@ -425,7 +430,7 @@ void initUIControl(HWND hWnd)
     // text Background Color
     int textBC_x = WND_WIDTH / 20;
     int textBC_y = anim.y + anim.height + UI_INTERVAL * 2;
-    CreateWindow(L"static", L"Background Color", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN,
+    CreateWindowEx(0, L"static", L"Background Color", WS_CHILD | WS_VISIBLE | ES_LEFT,
         textBC_x, textBC_y, 120, TEXT_HEIGHT, hWnd, (HMENU)TEXT_FILENAME, hInst, 0);
 
     // radio button
@@ -464,7 +469,7 @@ void initUIControl(HWND hWnd)
     // text Canvas Resize
     int textCR_x = WND_WIDTH / 2;
     int textCR_y = textBC_y;
-    CreateWindow(L"static", L"Canvas Resize", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN,
+    CreateWindowEx(0, L"static", L"Canvas Resize", WS_CHILD | WS_VISIBLE | ES_LEFT,
         textCR_x, textCR_y, 120, TEXT_HEIGHT, hWnd, (HMENU)TEXT_FILENAME, hInst, 0);
 
     // slider Canvas Resize
