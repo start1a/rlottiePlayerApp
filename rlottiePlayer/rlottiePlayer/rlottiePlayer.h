@@ -1,12 +1,11 @@
 #pragma once
 
 #include "resource.h"
-#include "rlottie.h"
 #include <Commdlg.h>                        // OPENFILENAME
 #include "atlconv.h"                             // String cast. ex) LPWSTR <-> LPSTR
 #include <gdiplus.h>
 #include <CommCtrl.h>						 // slider handle
-using namespace rlottie;
+#include <stdint.h>
 
 // interval
 #define UI_INTERVAL 20
@@ -14,6 +13,7 @@ using namespace rlottie;
 // length
 #define WND_WIDTH 1000
 #define WND_HEIGHT 800
+#define BMP_MAX_LEN	500
 #define BTN_WIDTH 100
 #define BTN_HEIGHT 30
 #define TEXT_HEIGHT 20
@@ -23,11 +23,11 @@ using namespace rlottie;
 #define RESIZE_LENGTH 10
 
 void setAnimation(char* path, size_t w, size_t h);
-void initAnimation();
-Surface* renderRLottieAnimation(unsigned int frameNum);
-// unsigned int intervalAnimation();
+void initAnimation(size_t w, size_t h);
+uint32_t* renderRLottieAnimation(uint32_t frameNum);
 size_t getTotalFrame();
 bool isAnimNULL();
+void setColor(float r, float g, float b);
 
 typedef struct RlottieBitmap
 {

@@ -58,7 +58,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
-    if (!InitInstance (hInstance, nCmdShow))
+    if (!InitInstance(hInstance, nCmdShow))
     {
         return FALSE;
     }
@@ -78,7 +78,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
 
     Gdiplus::GdiplusShutdown(gdiplustoken);
-    return (int) msg.wParam;
+    return (int)msg.wParam;
 }
 
 
@@ -94,17 +94,17 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_RLOTTIEPLAYER));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_RLOTTIEPLAYER);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_RLOTTIEPLAYER));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_RLOTTIEPLAYER);
+    wcex.lpszClassName = szWindowClass;
+    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
     return RegisterClassExW(&wcex);
 }
@@ -158,7 +158,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
     {
         initUIControl(hWnd);
-        initAnimation();
+        initAnimation(BMP_MAX_LEN, BMP_MAX_LEN);
         break;
     }
     case WM_TIMER:
@@ -318,8 +318,8 @@ void openJSONFileDialog(HWND hDlg)
         // LPWSTR(w_char*) -> LPSTR(char*)
         USES_CONVERSION;
         LPSTR path = W2A(ofn.lpstrFile);
-        
-        setAnimation(path, 500, 500);
+
+        setAnimation(path, BMP_MAX_LEN, BMP_MAX_LEN);
         // init play slider
         SendMessage(hSliderPlay, TBM_SETRANGE, FALSE, MAKELPARAM(0, getTotalFrame()));
         SendMessage(hSliderPlay, TBM_SETPOS, TRUE, 0);
@@ -335,13 +335,13 @@ void draw(HDC hdc)
     // background
     SolidBrush brush(backColor);
     int back_y = half_interval + BTN_HEIGHT;
-    int back_height = back_y + WND_WIDTH / 2 + UI_INTERVAL;
+    int back_height = back_y + BMP_MAX_LEN + UI_INTERVAL;
     if (isBackgroundChanged)
     {
         isBackgroundChanged = false;
         gf.FillRectangle(&brush, 0, back_y, WND_WIDTH, back_height);
     }
-    
+
     // image borderline
     Pen pen(borderColor);
     gf.DrawRectangle(&pen, anim.x - half_interval, anim.y - half_interval, anim.width + half_interval * 2, anim.height + half_interval * 2);
@@ -359,8 +359,8 @@ Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height)
     memset(&Info, 0, sizeof(Info));
 
     Info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    Info.bmiHeader.biWidth = width;
-    Info.bmiHeader.biHeight = height;
+    Info.bmiHeader.biWidth = 500;
+    Info.bmiHeader.biHeight = 500;
     Info.bmiHeader.biPlanes = 1;
     Info.bmiHeader.biBitCount = 32;
     Info.bmiHeader.biCompression = BI_RGB;
@@ -372,19 +372,13 @@ Bitmap* CreateBitmap(void* data, unsigned int width, unsigned int height)
 void renderAnimation(UINT frameNum)
 {
     if (isAnimNULL()) return;
+    if (anim.image != NULL) delete anim.image;
 
-    if (anim.image != NULL)
-    {
-        delete anim.image;
-    }
-
-    curFrame = frameNum;
-    if (curFrame >= getTotalFrame())
-        curFrame = 0;
+    curFrame = frameNum % getTotalFrame();
 
     // render
-    auto resRender = renderRLottieAnimation(curFrame);
-    anim.image = CreateBitmap(resRender->buffer(), resRender->width(), resRender->height());
+    UINT* resRender = renderRLottieAnimation(curFrame);
+    anim.image = CreateBitmap(resRender, BMP_MAX_LEN, BMP_MAX_LEN);
     anim.image->RotateFlip(RotateNoneFlipY);
     // call WM_PAINT message
     InvalidateRect(mainWindow, &animRect, FALSE);
@@ -409,9 +403,9 @@ void initUIControl(HWND hWnd)
     // image
     anim.x = WND_WIDTH / 4;
     anim.y = browse_y + BTN_HEIGHT + UI_INTERVAL * 2;
-    anim.width = WND_WIDTH / 2;
+    anim.width = BMP_MAX_LEN;
     anim.height = anim.width;
-    
+
     // animating range
     SetRect(&animRect,
         anim.x - UI_INTERVAL,
