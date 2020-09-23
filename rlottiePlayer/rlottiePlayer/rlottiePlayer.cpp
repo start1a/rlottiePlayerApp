@@ -240,13 +240,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_HSCROLL:
     {
-        static UINT curSize;
         if ((lParam != 0) && (reinterpret_cast<HWND>(lParam) == hSliderPlay))
         {
             UINT frameNum = SendDlgItemMessage(hWnd, SLIDER_PLAY, TBM_GETPOS, 0, 0);
             renderAnimation(frameNum);
         }
-        else
+        else if ((lParam != 0) && (reinterpret_cast<HWND>(lParam) == hSliderCanvasResize))
         {
             static int curSize = anim.width / RESIZE_LENGTH;
             int newSize = SendDlgItemMessage(hWnd, SLIDER_CANVAS_RESIZE, TBM_GETPOS, 0, 0);
