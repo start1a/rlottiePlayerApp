@@ -27,7 +27,7 @@ void initAnimation(size_t w, size_t h);
 uint32_t* renderRLottieAnimation(uint32_t frameNum);
 size_t getTotalFrame();
 bool isAnimNULL();
-void setColor(float r, float g, float b);
+void setAnimationColor(int r, int g, int b);
 
 typedef struct RlottieBitmap
 {

@@ -32,7 +32,7 @@ void openJSONFileDialog(HWND);
 void initUIControl(HWND);
 void dlgUICommand(HWND, WPARAM);
 void resizeCanvas(HWND, int);
-void changeBackgroundColor(Gdiplus::Color backgroundColor, Gdiplus::Color borderlineColor);
+void changeBackgroundColor(int r, int g, int b);
 
 // Animation Rendering Functions
 void draw(HDC);
@@ -217,19 +217,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_DROPFILES:
             break;
         case BTN_WHITE:
-            changeBackgroundColor(Gdiplus::Color(255, 255, 255), Gdiplus::Color(0, 0, 0));
+            changeBackgroundColor(1, 1, 1);
             break;
         case BTN_BLACK:
-            changeBackgroundColor(Gdiplus::Color(0, 0, 0), Gdiplus::Color(255, 255, 255));
+            changeBackgroundColor(0, 0, 0);
             break;
         case BTN_RED:
-            changeBackgroundColor(Gdiplus::Color(255, 0, 0), Gdiplus::Color(0, 0, 0));
+            changeBackgroundColor(1, 0, 0);
             break;
         case BTN_GREEN:
-            changeBackgroundColor(Gdiplus::Color(0, 255, 0), Gdiplus::Color(0, 0, 0));
+            changeBackgroundColor(0, 1, 0);
             break;
         case BTN_BLUE:
-            changeBackgroundColor(Gdiplus::Color(0, 0, 255), Gdiplus::Color(0, 0, 0));
+            changeBackgroundColor(0, 0, 1);
             break;
 
         default:
@@ -505,10 +505,13 @@ void resizeCanvas(HWND hWnd, int resizeValue)
     InvalidateRect(hWnd, &animRect, TRUE);
 }
 
-void changeBackgroundColor(Gdiplus::Color backgroundColor, Gdiplus::Color borderlineColor)
+void changeBackgroundColor(int r, int g, int b)
 {
     isBackgroundChanged = true;
-    backColor = backgroundColor;
-    borderColor = borderlineColor;
+    backColor = Gdiplus::Color(r * 255, g * 255, b * 255);
+    if (r + g + b == 0) borderColor = Gdiplus::Color(255, 255, 255);
+    else borderColor = Gdiplus::Color(0, 0, 0);
+    setAnimationColor(r, g, b);
+    renderAnimation(curFrame);
     InvalidateRect(mainWindow, &backRect, FALSE);
 }
